@@ -4,13 +4,45 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Octicons, MaterialCommunityIcons, Ionicons } from "@expo/vector-icons";
 import { Post } from "@/types";
 import Profile from "./Profile";
+import useAuth from "@/hooks/queries/useAuth";
+import { useActionSheet } from "@expo/react-native-action-sheet";
+import useDeletePost from "@/hooks/queries/useDeletePost";
+import { router } from "expo-router";
 
 interface FeedItemProps {
   post: Post;
 }
 
 function FeedItem({ post }: FeedItemProps) {
-  const isLiked = true;
+  const { auth } = useAuth();
+  const likeUsers = post.likes?.map((like) => Number(like.userId));
+  const isLiked = likeUsers?.includes(Number(auth.id));
+  const { showActionSheetWithOptions } = useActionSheet();
+  const deletePost = useDeletePost();
+
+  const handlePressOption = () => {
+    const options = ["삭제", "수정", "취소"];
+    const destructiveButtonIndex = 0;
+    const cancelButtonIndex = 2;
+
+    showActionSheetWithOptions(
+      { options, cancelButtonIndex, destructiveButtonIndex },
+      (selectedIndex?: number) => {
+        switch (selectedIndex) {
+          case destructiveButtonIndex:
+            deletePost.mutate(post.id);
+            break;
+          case 1:
+            router.push(`../post/update/${post.id}`);
+            break;
+          case cancelButtonIndex:
+            break;
+          default:
+            break;
+        }
+      }
+    );
+  };
 
   return (
     <View style={styles.container}>
@@ -20,6 +52,16 @@ function FeedItem({ post }: FeedItemProps) {
           nickname={post.author.nickname}
           createdAt={post.createdAt}
           onPress={() => {}}
+          option={
+            auth.id === post.author.id && (
+              <Ionicons
+                name="ellipsis-vertical"
+                size={24}
+                color={colors.BLACK}
+                onPress={handlePressOption}
+              />
+            )
+          }
         />
         <Text style={styles.title}>{post.title}</Text>
         <Text numberOfLines={3} style={styles.description}>
@@ -34,7 +76,7 @@ function FeedItem({ post }: FeedItemProps) {
             color={isLiked ? colors.ORANGE_600 : colors.BLACK}
           />
           <Text style={isLiked ? styles.activeMenuText : styles.menuText}>
-            1
+            {post.likes.length || "좋아요"}
           </Text>
         </Pressable>
         <Pressable style={styles.menu}>
@@ -43,11 +85,11 @@ function FeedItem({ post }: FeedItemProps) {
             size={16}
             color={colors.BLACK}
           />
-          <Text style={styles.menuText}>1</Text>
+          <Text style={styles.menuText}>{post.commentCount || "댓글"}</Text>
         </Pressable>
         <Pressable style={styles.menu}>
           <Ionicons name="eye-outline" size={16} color={colors.BLACK} />
-          <Text style={styles.menuText}>1</Text>
+          <Text style={styles.menuText}>{post.viewCount}</Text>
         </Pressable>
       </View>
     </View>

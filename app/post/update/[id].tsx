@@ -1,19 +1,14 @@
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { FormProvider, useForm } from "react-hook-form";
-import {
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { ScrollView, StyleSheet, View } from "react-native";
 import DescriptionInput from "@/components/DescriptionInput";
 import TitleInput from "@/components/TitleInput";
-import useCreatePost from "@/hooks/queries/useCreatePost";
 import { ImageUri } from "@/types";
-import { useNavigation } from "expo-router";
+import { router, useLocalSearchParams, useNavigation } from "expo-router";
 import { useEffect } from "react";
 import CustomButton from "@/components/CustomButton";
+import useGetPost from "@/hooks/queries/useGetPost";
+import useUpdatePost from "@/hooks/queries/useUpdatePost";
 
 type FormValues = {
   title: string;
@@ -21,26 +16,32 @@ type FormValues = {
   imageUris: ImageUri[];
 };
 
-export default function PostWriteScreen() {
+export default function PostUpdateScreen() {
+  const { id } = useLocalSearchParams();
   const navigation = useNavigation();
-  const createPost = useCreatePost();
-  const postForm = useForm<FormValues>({
-    defaultValues: {
-      title: "",
-      description: "",
-      imageUris: [],
-    },
-  });
+  const { data: post } = useGetPost(Number(id));
+  const updatePost = useUpdatePost();
 
+  const postForm = useForm<FormValues>();
+  useEffect(() => {
+    if (post) {
+      postForm.reset({
+        title: post.title,
+        description: post.description,
+        imageUris: post.imageUris,
+      });
+    }
+  }, [post, postForm]);
   const onSubmit = (formValues: FormValues) => {
-    createPost.mutate(formValues, {
-      onError: (error) => {
-        console.error("Failed to create post:", error);
+    updatePost.mutate(
+      {
+        id: Number(id),
+        body: formValues,
       },
-      onSuccess: (data) => {
-        console.log("Post created successfully:", data); // data 값을 출력하여 확인
-      },
-    });
+      {
+        onSuccess: () => router.back(),
+      }
+    );
   };
 
   useEffect(() => {
@@ -55,6 +56,7 @@ export default function PostWriteScreen() {
       ),
     });
   }, []);
+
   return (
     <FormProvider {...postForm}>
       <KeyboardAwareScrollView contentContainerStyle={styles.container}>

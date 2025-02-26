@@ -1,6 +1,7 @@
-import { Link, Stack } from "expo-router";
+import { Link, router, Stack } from "expo-router";
 import { colors } from "@/constants";
 import { Feather } from "@expo/vector-icons";
+import { TouchableOpacity } from "react-native";
 
 export default function PostLayout() {
   return (
@@ -18,9 +19,32 @@ export default function PostLayout() {
           title: "글쓰기",
           headerShown: true,
           headerLeft: () => (
-            <Link href={"/"} replace>
+            <TouchableOpacity
+              onPressOut={() => {
+                router.replace("/");
+              }}
+              style={{ paddingRight: 5 }}
+            >
               <Feather name="arrow-left" size={28} color={"black"} />
-            </Link>
+            </TouchableOpacity>
+          ),
+        }}
+      />
+
+      <Stack.Screen
+        name="update/[id]"
+        options={{
+          title: "수정",
+          headerShown: true,
+          headerLeft: () => (
+            <TouchableOpacity
+              onPressOut={() => {
+                router.back();
+              }}
+              style={{ paddingRight: 5 }}
+            >
+              <Feather name="arrow-left" size={28} color={"black"} />
+            </TouchableOpacity>
           ),
         }}
       />

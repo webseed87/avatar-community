@@ -11,7 +11,7 @@ function DescriptionInput() {
       control={control}
       rules={{
         validate: (data: string) => {
-          if (data.length === 5) {
+          if (data.length < 5) {
             return "내용을 5자 이상으로 입력해주세요.";
           }
         },
